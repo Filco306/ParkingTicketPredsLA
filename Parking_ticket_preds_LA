@@ -1,0 +1,39 @@
+import numpy as np
+import pandas as pd
+data = pd.read_csv("Data/parking-citations.csv")
+
+
+data.head()
+
+
+
+
+data['Issue Date'] = data['Issue Date'].astype("str")
+data['Issue Date'] = pd.to_datetime(data['Issue Date'])
+
+
+from datetime import datetime, timedelta, time
+
+def convert_date_to_hourly(row):    
+    nr_str = str(int(row[2]))
+    print(nr_str)
+    if len(nr_str) >= 3:
+        #seq = row[1] + timedelta(hours = int(str(int(row[2]))[:(len(nr_str)-2)]), minutes=int(str(int(row[2]))[(len(nr_str)-2):]))
+        seq = row[1] + timedelta(hours = int(str(int(row[2]))[:(len(nr_str)-2)]))
+    else:
+        #seq = row[1] + timedelta(minutes = int(str(int(row[2]))))
+        seq = row[1]
+    print(seq)
+    return seq
+data['Issue time'] = data['Issue time'].fillna(0)
+
+data['Time section'] = data.apply(convert_date_to_hourly, axis=1)
+
+data.head()
+
+
+data['Time section'].head()
+
+data['Time section'].value_counts()#.sort_index().values
+
+
