@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import stats
-from Modules.data_handler import DataHandler
+from Modules.ETL.data_handler import DataHandler
 class KernelModel:
     def __init__(self, dh = None, kernel_cols = None):
         if dh is None:

@@ -13,6 +13,8 @@ I have, minute by minute, geopoint by geopoint, whether a
 
 In priors, include holidays, people gatherings, stadium locations, parking lots and such
 
+
+I probably need some kind of data discretization. If I divide it gridwise, that could work I guess.
 """
 
     def serve_prediction(self, start_time, end_time, location, range):

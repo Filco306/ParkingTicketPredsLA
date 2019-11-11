@@ -1,8 +1,12 @@
 *.csv
+*.json
 .DS_Store
 Data/
 .Rproj.user
 __pycache__
 /Ad-hoc
 .ipynb_checkpoints
-secrets
+Old/
+*.aux
+*.log
+*.synctex.gz
