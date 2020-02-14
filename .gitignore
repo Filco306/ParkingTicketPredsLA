@@ -11,3 +11,4 @@ Old/
 *.log
 *.synctex.gz
 venv/
+Paper/
