@@ -27,6 +27,3 @@ class DataHandler:
             df = df.loc[df[col] == min_conditions[col]]
 
         return df
-
-
-    

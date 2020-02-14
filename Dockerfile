@@ -46,6 +46,7 @@ COPY . .
 
 ### Export pdf filename into bash_profile
 RUN echo "export pdf_file_name=\"LADOT\-Xerox\ Crib\ Sheet\ Agency\ Codes\ 12\-31\-2015\ \(1\).pdf\"" >> /.bash_profile
+RUN echo "export FLASK_APP=run.py" >> /.bash_profile
 
 
 ###
@@ -53,9 +54,16 @@ RUN echo "export pdf_file_name=\"LADOT\-Xerox\ Crib\ Sheet\ Agency\ Codes\ 12\-3
 ### TODO: setup_pip.sh is not necessary right?
 ### Here, we set up the directories, packages, fetch the data, preprocess it and then run the app
 ###
-CMD ["sh","-c",". /.bash_profile \
-      && sh Scripts/move_secret.sh \
-      && sh setup_directories.sh \
-      && sh fetch_data.sh \
-      && sh Scripts/preprocess_all_data.sh \
-      && sh run.sh"]
+#CMD ["sh","-c",". /.bash_profile \
+#      && sh Scripts/move_secret.sh \
+#      && sh setup_directories.sh \
+#      && sh fetch_data.sh \
+#      && sh Scripts/preprocess_all_data.sh \
+#      && sh run.sh"]
+
+CMD bash /.bash_profile \
+  && sh Scripts/move_secret.sh \
+  && sh setup_directories.sh \
+  && sh fetch_data.sh \
+  && sh Scripts/preprocess_all_data.sh \
+  && sh run.sh

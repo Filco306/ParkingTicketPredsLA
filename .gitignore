@@ -10,3 +10,4 @@ Old/
 *.aux
 *.log
 *.synctex.gz
+venv/

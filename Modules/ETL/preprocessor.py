@@ -13,38 +13,28 @@ class Preprocessor:
 
 
 
-    """
-        Currently removes nas for:
 
-    """
     def remove_nas(self, df, cols_to_remove_nas=["Issue time", "Issue Date","Latitude","Longitude","Location"]):
+        """
+            Drops na rows for the columns cols_to_remove_nas
+
+        """
         for col in cols_to_remove_nas:
             df = df.loc[df[col].isna() == False]
         return df
 
 
-    """
-        Extracts, for each date, whether a date was a public holiday, and which day of the week it was.
-        TODO: Transform this to weekly data rather, where both day of the week AND the time is used. The period, with circular transformation should 24*60*7
-        and the
-    """
+
     def get_holidays_data(self,df, time_col = 'Exact issuing time'):
+        """
+            Extracts, for each date, whether a date was a public holiday, and which day of the week it was.
+            TODO: Transform this to weekly data rather, where both day of the week AND the time is used. The period, with circular transformation should 24*60*7
+            and the
+        """
         # https://pypi.org/project/holidays/
         us_holidays = holidays.CountryHoliday('US', prov=None, state='CA')
         df['is_holiday'] = df[time_col].apply(lambda x : 1 if us_holidays.get(x) is not None else 0)
-        # TODO: Do not use.
-
-        #df = pd.concat([df,pd.get_dummies(df[time_col].dt.weekday.replace({0 : "Monday", 1 : "Tuesday", 2 : "Wednesday", 3 : "Thursday", 4 : "Friday", 5 : "Saturday", 6 : "Sunday"}))],axis=1)
-
         return df
-
-    def preprocess_incoming_data(self, df):
-        print("Initializing preprocessing")
-
-        agencies = pd.read_csv("Data/Agencies.csv", sep = ";").dropna()
-
-        df = df.merge(agencies, how = "left", on = "Agency")
-
 
     """
         Will remove coordinates that are not accurate
@@ -71,7 +61,6 @@ class Preprocessor:
 
         return pd.concat([df, df_bad_coords],axis=0)
 
-
     def convert_date_to_hourly(self,df):
         df['Issue time'] = df['Issue time'].astype("int64").astype("str").str.pad(width=4,side='left',fillchar='0')
         df['Issue time'] = df['Issue time'].str.slice(stop=2)+':'+df['Issue time'].str.slice(start=2)+':00'
@@ -94,7 +83,6 @@ class Preprocessor:
         density = np.divide(density, np.sum(density))
         df.loc[df[col].isna(),col] = np.random.choice(x, p = density, size = df[col].isna().sum())
         return df
-
 
     def circular_transformation(self, df, col_name, period_length = 24):
         """transforms one periodic pd.series into two pd.series
