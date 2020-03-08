@@ -173,7 +173,6 @@ class Preprocessor:
         sc = MinMaxScaler()
         df["year_scaled"] = sc.fit_transform(df["Year"].values.reshape(-1, 1))
         df["date issued"] = df["Exact issuing time"].dt.date
-        # df.drop(["time_on_day","day_of_year","day_of_week","Year"],axis=1,inplace=True)
         return df
 
     def fix_spatial_vars(self, df, x_dim=100, y_dim=100):
@@ -203,7 +202,9 @@ class Preprocessor:
         return n
 
     """
-        Does a complete preprocessing of a raw dataframe incoming to do the density
+        Does a complete preprocessing
+        of a raw dataframe
+        incoming to do the density
     """
 
     def full_preprocessing(self, raw_df, verbose=True):
@@ -240,6 +241,7 @@ class Preprocessor:
             axis=1,
             inplace=True,
         )
+        print(list(df))
         df.columns = [
             "Ticket number",
             "Issue Date",
@@ -260,6 +262,9 @@ class Preprocessor:
             "Fine amount",
             "Latitude",
             "Longitude",
+            "Agency Description",
+            "Color Description",
+            "Body Style Description",
             "Location",
             "HSE_DIR_CD",
             "HSE_NBR",
@@ -268,9 +273,6 @@ class Preprocessor:
         ]
         df = self.convert_date_to_hourly(df)
         df = df.loc[(df["Exact issuing time"].astype("int64") > 1.4 * 10 ** 18)]
-        df = self.fix_time_vars(df)
-        df = self.fix_spatial_vars(df)
-        df = self.get_holidays_data(df)
         df = self.fill_nas(df)
         return df
 
@@ -291,7 +293,7 @@ class Preprocessor:
         )
 
     def impute_coordinates(self, df, df_has_loc_info=True):
-        addresses_full = pd.read_csv("Data/Addresses_in_the_City_of_Los_Angeles.csv")
+        addresses_full = pd.read_csv("Data/addresses-in-the-city-of-los-angeles.csv")
         if df_has_loc_info is False:
             locations = self.fix_locations(df)
         else:
@@ -323,7 +325,7 @@ class Preprocessor:
         return pd.concat([a, b], axis=0).drop_duplicates(subset=["Ticket number"])
 
     def fix_locations(self, df):
-        addresses_full = pd.read_csv("Data/Addresses_in_the_City_of_Los_Angeles.csv")
+        addresses_full = pd.read_csv("Data/addresses-in-the-city-of-los-angeles.csv")
         locations = pd.DataFrame(df[["Ticket number", "Location"]])
         # print(locations.head())
         locations["HSE_DIR_CD"] = locations["Location"].str.extract(
@@ -374,26 +376,5 @@ class Preprocessor:
         )
 
     def fill_nas(self, df):
-        str_cols = [
-            "RP State Plate",
-            "Plate Expiry Date",
-            "VIN",
-            "Make",
-            "Body Style",
-            "Color",
-            "Route",
-            "Agency",
-            "Violation code",
-            "Violation Description",
-            "Fine amount",
-            "Latitude",
-            "Longitude",
-            "Location",
-            "HSE_DIR_CD",
-            "STR_SFX_CD",
-        ]
-
-        int_cols = ["Meter Id", "Marked Time"]
-        df[int_cols] = df[int_cols].fillna(-1)
-        df[str_cols] = df[str_cols].fillna("N/A")
+        df = df.where(pd.notnull(df), None)
         return df

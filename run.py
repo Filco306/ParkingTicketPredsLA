@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from src.plotter import Plotter
 from src.data_handler import DataHandler
 from src.kernelized_model import KernelModel
@@ -119,6 +119,11 @@ def twodimhist():
 @app.route("/about")
 def about():
     return render_template("about.html")
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "200 OK"})
 
 
 @app.route("/model")

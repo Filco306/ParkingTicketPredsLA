@@ -13,3 +13,5 @@ Old/
 venv/
 Paper/
 __init__.py
+.api_env
+.db_env

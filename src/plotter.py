@@ -5,6 +5,7 @@ from bokeh.models.widgets import Slider, Select
 from bokeh.models.widgets.inputs import DatePicker, MultiSelect
 from datetime import date
 import numpy as np
+import random
 from bokeh.tile_providers import get_provider, Vendors
 from bokeh.layouts import column, layout
 from bokeh.models import BoxSelectTool, LassoSelectTool, ColumnDataSource
@@ -38,8 +39,6 @@ class Plotter:
     # And then remade
     def merc(self, lat, lon):
         # Coordinates = literal_eval(Coords)
-        # lat = Coordinates[0]
-        # lon = Coordinates[1]
 
         r_major = 6378137.000
         x = r_major * np.radians(lon)
@@ -58,7 +57,6 @@ class Plotter:
     """
 
     def generate_n_colors(self, n):
-        import random
 
         number_of_colors = n
 
@@ -95,8 +93,8 @@ class Plotter:
     def test_hist(self, doc):
 
         default_bar_var = "STR_NM"
-        min_date = date(2019, 9, 16)  # date.today() - timedelta(days = 1)
-        max_date = date(2019, 9, 17)  # date.today()
+        min_date = date(2019, 9, 16)
+        max_date = date(2019, 9, 17)
         self.n_clusters = 4
         default_top = 10
 

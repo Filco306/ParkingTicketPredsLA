@@ -1,10 +1,18 @@
 import pandas as pd
+import os
+from src.preprocessor import Preprocessor
+import logging
+import re
+import psycopg2
 
 
 class DataHandler:
     def __init__(self):
-        print("Fetching data")
-        self.full_df = pd.read_pickle("Data/processed_data/df_all_cols_processed")
+        logging.info("Fetching data")
+        if os.path.exists("Data/processed_data/df_all_cols_processed") == False:
+            self.full_df = self.preprocess_all()
+        else:
+            self.full_df = pd.read_pickle("Data/processed_data/df_all_cols_processed")
         self.density_vars = [
             "time_on_day_cx",
             "time_on_day_cy",
@@ -26,6 +34,38 @@ class DataHandler:
             "Longitude",
             "is_holiday",
         ]
+
+    def rename_column(self, x):
+        return re.sub(r"\W+", "", x).lower()
+
+    def preprocess_and_ingest_into_postgres(self, cursor, df):
+        pass
+
+    def preprocess_all(self):
+        # raw = pd.read_csv("Data/parking-citations.csv")
+        pp = Preprocessor(append_to_prev=False)
+        table = "PARKINGTICKET"
+        chunksize = 10 ** 6
+
+        conn = psycopg2.connect(
+            "dbname='postgres' user='postgres' host='postgres' password='postgres'"
+        )
+        cur = conn.cursor()
+
+        for chunk in pd.read_csv("Data/parking-citations.csv", chunksize=chunksize):
+            df = pp.full_preprocessing(chunk)
+
+            df.columns = [self.rename_column(x) for x in list(df)]
+            df_dict = df.to_dict(orient="records")
+            cur.executemany(
+                """INSERT INTO {}({}) VALUES ({})""".format(
+                    table,
+                    ",".join(list(df.columns)),
+                    "%(" + ")s,%(".join(list(df.columns)) + ")s",
+                ),
+                df_dict,
+            )
+        conn.close()
 
     def get_density_df(self):
         return self.full_df[self.density_vars]
