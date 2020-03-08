@@ -12,3 +12,4 @@ Old/
 *.synctex.gz
 venv/
 Paper/
+__init__.py
