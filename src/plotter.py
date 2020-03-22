@@ -56,7 +56,6 @@ class Plotter:
     # part-ii-intro-to-bokeh-5dca6c5ced10
     # And then remade
     def merc(self, lat, lon):
-        # Coordinates = literal_eval(Coords)
 
         r_major = 6378137.000
         x = r_major * np.radians(lon)
@@ -247,6 +246,22 @@ class Plotter:
                 self.conn, mindate, maxdate, limit=limit.value
             )
             df = self.dh.full_df
+            if df.shape[0] == 0:
+                logging.warning(
+                    "DF is empty!!! Adding dummy data to cover up for now. "
+                )
+                self.dh.full_df = pd.read_sql(
+                    """SELECT location,
+                       AVG(latitude) as latitude,
+                       AVG(longitude) as longitude,
+                       count(*) as freq
+                FROM parkingticket
+                group by location
+                ORDER BY freq DESC
+                LIMIT 10;""",
+                    self.conn,
+                )
+                df = self.dh.full_df
             self.bar_var_chosen = select_bar_variable.value
             bar_source_new, _ = self.create_bar_plot(
                 self.bar_var_chosen, df, show_top.value
@@ -278,8 +293,6 @@ class Plotter:
             # TODO: Do not re-render each time
 
             bar_source.data = bar_source_new.data
-
-            # Fix
 
             logging.info("DF should be changed?")
             logging.info(df)

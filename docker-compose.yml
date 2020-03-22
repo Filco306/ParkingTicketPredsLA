@@ -12,7 +12,7 @@ services:
       - ".db_env"
   dataingestor:
     container_name: dataingestor
-    restart: always
+    restart: on-failure
     build:
       context: .
       dockerfile: Dockerfile.ingestion
@@ -30,6 +30,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+      - "5006:5006"
     volumes:
       - "./src:/usr/src/app/src"
     depends_on:

@@ -36,7 +36,7 @@ def ingest_addresses(conn=None):
             df_dict,
         )
         conn.commit()
-        logging.info("Ingested {} elements into the db".format(chunk.shape[0]))
+        logging.info("Ingested {} addresses into the db".format(chunk.shape[0]))
     conn.close()
 
 
@@ -68,9 +68,10 @@ def ingest_raw_parkingtickets(conn=None):
     if conn is None:
         conn = get_postgis_conn()
     chunksize = int(5e5)
-    logging.info("Came in here")
     table = "PARKINGTICKET_RAW"
     cur = conn.cursor()
+    max_to_insert = int(os.environ.get("MAX_TO_PROCESS", 1e9))
+    count = 0
     for chunk in pd.read_csv("Data/parking-citations.csv", chunksize=chunksize):
         df = fill_nas(chunk.rename(colmapping, axis=1))
         df_dict = df.to_dict(orient="records")
@@ -86,6 +87,9 @@ def ingest_raw_parkingtickets(conn=None):
         conn.commit()
         gc.collect()
         logging.info("Ingested {} elements into the db".format(df.shape[0]))
+        count += 1
+        if max_to_insert < count * chunksize:
+            break
     conn.close()
     # Now, this db
 

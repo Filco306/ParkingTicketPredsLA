@@ -289,8 +289,6 @@ def batch_preprocessing(conn=None):
         df.columns = [rename_column(x) for x in list(df)]
         df_dict = df.to_dict(orient="records")
 
-        # cur.execute("DELETE FROM PARKINGTICKET")
-        # conn.commit()
         cur.executemany(
             """INSERT INTO {}({}) VALUES ({})""".format(
                 table,
@@ -303,6 +301,7 @@ def batch_preprocessing(conn=None):
         conn.commit()
         count += 1
         logging.info("Inserted processed batch {}".format(count))
+
     conn.close()
 
 

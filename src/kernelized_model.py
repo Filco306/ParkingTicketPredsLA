@@ -50,5 +50,4 @@ class KernelModel:
             vals = df[self.kernel_cols].values.T
         else:
             vals = df.values.T
-        # vals = df.values.T
         return self.kde.evaluate(vals)

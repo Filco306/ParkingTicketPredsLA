@@ -3,7 +3,6 @@ mkdir Data
 mkdir Data/MetaData
 mkdir Data/processed_data
 chmod 600 ~/.kaggle/kaggle.json
-cat ~/.kaggle/kaggle.json
 kaggle datasets download -d cityofLA/los-angeles-parking-citations
 unzip los-angeles-parking-citations
 rm los-angeles-parking-citations.zip

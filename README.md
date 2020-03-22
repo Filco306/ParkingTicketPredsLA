@@ -19,7 +19,7 @@ The steps are simple.
   - `.api_env`
   - `.db_env`
   - `.ingest_env`
-- Place a `kaggle.json` file in `secrets`. That is the set up you need.
+- Place a `kaggle.json` file in `secrets`. That is the set up you need. This is a .json-file with your kaggle-credentials that you get from Kaggle.
 
 ### Run - for the first time or once it is set up.
 
@@ -33,5 +33,5 @@ Let it run, until it is done. When it has run once, in the future, use `bash run
 
 ## NOTE
 
-- The first time you run it, it may take some time to digest and process everything, since the data contains more than 10 million parking tickets.
+- The first time you run it, it may take some time to digest and process everything, since the data contains more than 10 million parking tickets. You can limit this by setting `MAX_TO_PROCESS` to the maximum number of tickets you would like to process, if you would like to try this out a bit faster.
 - Some parking tickets are dropped in the preprocessing, so all are not visualized necessarily.

@@ -4,7 +4,7 @@ import logging
 import os
 
 logging.basicConfig(level=os.environ.get("LOGGING_LEVEL", "INFO"))
-logging.info("Ingestion started")
 ingest_raw_parkingtickets()
 ingest_addresses()
+logging.info("Preprocessing the data!")
 batch_preprocessing()

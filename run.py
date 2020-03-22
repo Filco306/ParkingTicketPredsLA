@@ -57,21 +57,19 @@ def densities():
 @app.route("/map", methods=["GET"])
 def map_page():
     script = server_document("http://localhost:5006/map")
-    print("GOING IN HERE NOW!!!!!!!!2!2!2!2")
     return render_template("embed.html", script=script, template="Flask")
 
 
 @app.route("/table", methods=["GET"])
 def table_page():
     script = server_document("http://localhost:5006/table")
-    print("GOING IN HERE NOW")
     return render_template("embed.html", script=script, template="Flask")
 
 
 def bk_worker():
-    # Can't pass num_procs > 1 in this configuration. If you need to run multiple
+    # Can't pass num_procs > 1 in this configuration.
+    # If you need to run multiple
     # processes, see e.g. flask_gunicorn_embed.py
-    print("I AM IN HERE")
     server = Server(
         {"/table": plotter.show_table, "/map": plotter.test_hist},
         io_loop=IOLoop(),
