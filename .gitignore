@@ -17,5 +17,4 @@ __init__.py
 .db_env
 gisstuff/
 .ingestor_env
-.pre-commit-config.yaml
 .flake8
