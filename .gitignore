@@ -15,3 +15,7 @@ Paper/
 __init__.py
 .api_env
 .db_env
+gisstuff/
+.ingestor_env
+.pre-commit-config.yaml
+.flake8

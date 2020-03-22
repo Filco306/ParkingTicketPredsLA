@@ -1,5 +1,9 @@
 from scipy import stats
 from src.data_handler import DataHandler
+import logging
+import os
+
+logging.basicConfig(level=os.environ.get("LOGGING_LEVEL", "INFO"))
 
 
 class KernelModel:
@@ -14,7 +18,7 @@ class KernelModel:
         else:
             self.kernel_cols = kernel_cols
 
-        print("Initializing")
+        logging.info("Initializing")
         self.kde = None
 
     def train_model(self):
@@ -25,16 +29,18 @@ class KernelModel:
             vals = self.dh.get_density_df().values.T
 
         self.kde = stats.gaussian_kde(vals)
-        print("Trained a kde")
+        logging.info("Trained a kde")
 
     """
-        Assumes a preprocessed df sent in and predicts, for each data point, a density prediction.
+        Assumes a preprocessed df sent
+        in and predicts, for each data point,
+        a density prediction.
 
     """
 
     def get_densities(self, df=None):
         if self.kde is None:
-            print("No trained kde, training now. ")
+            logging.info("No trained kde, training now. ")
             self.train_model()
 
         if df is None:

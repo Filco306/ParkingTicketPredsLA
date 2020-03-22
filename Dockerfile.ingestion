@@ -10,8 +10,4 @@ COPY secrets/kaggle.json ~/.kaggle/kaggle.json
 COPY . .
 EXPOSE 5000
 
-RUN chmod +x Scripts/wait_with_starting.sh
-
-##CMD sh Scripts/fetch_data.sh
-CMD bash -c Scripts/wait_with_starting.sh
-##CMD python3 -u ./index.py
+CMD sh Scripts/fetch_data.sh

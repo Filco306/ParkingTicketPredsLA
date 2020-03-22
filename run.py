@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, jsonify
 from src.plotter import Plotter
-from src.data_handler import DataHandler
-from src.kernelized_model import KernelModel
 from bokeh.embed import components
 from bokeh.embed import server_document
 from bokeh.layouts import column
@@ -14,9 +12,7 @@ from threading import Thread
 from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
 
 app = Flask(__name__)
-dh = DataHandler()
-plotter = Plotter(dh=dh)
-kern_model = KernelModel(dh=dh)
+plotter = Plotter(dh=None)
 
 
 def bkapp(doc):
@@ -58,17 +54,26 @@ def densities():
     )
 
 
-@app.route("/embedding", methods=["GET"])
-def bkapp_page():
-    script = server_document("http://localhost:5006/bkapp")
+@app.route("/map", methods=["GET"])
+def map_page():
+    script = server_document("http://localhost:5006/map")
+    print("GOING IN HERE NOW!!!!!!!!2!2!2!2")
+    return render_template("embed.html", script=script, template="Flask")
+
+
+@app.route("/table", methods=["GET"])
+def table_page():
+    script = server_document("http://localhost:5006/table")
+    print("GOING IN HERE NOW")
     return render_template("embed.html", script=script, template="Flask")
 
 
 def bk_worker():
     # Can't pass num_procs > 1 in this configuration. If you need to run multiple
     # processes, see e.g. flask_gunicorn_embed.py
+    print("I AM IN HERE")
     server = Server(
-        {"/bkapp": plotter.test_hist},
+        {"/table": plotter.show_table, "/map": plotter.test_hist},
         io_loop=IOLoop(),
         allow_websocket_origin=["localhost:5000"],
     )
@@ -97,7 +102,6 @@ def home():
         wday_div=wday_div,
         script_yday=script_yday,
         yday_div=yday_div,
-        feature_names=list(dh.full_df),
         script_=script,
         div_=div,
         feature_picked=current_feature_name,
@@ -106,7 +110,7 @@ def home():
 
 @app.route("/twodimhist")
 def twodimhist():
-    p = plotter.test_histogram()
+    p = plotter.test_hist()
     script, div = components(p)
     return render_template(
         "twodimhist.html",

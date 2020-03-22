@@ -1,41 +1,59 @@
 import math
 from src.data_handler import DataHandler
 from bokeh.models import Button
-from bokeh.models.widgets import Slider, Select
+from bokeh.models.widgets import Slider, Select, TableColumn, DataTable
 from bokeh.models.widgets.inputs import DatePicker, MultiSelect
-from datetime import date
+from datetime import datetime
 import numpy as np
+import pandas as pd
+import os
 import random
 from bokeh.tile_providers import get_provider, Vendors
 from bokeh.layouts import column, layout
 from bokeh.models import BoxSelectTool, LassoSelectTool, ColumnDataSource
 from bokeh.plotting import figure
 from sklearn.cluster import KMeans
+from src.db_connecting import get_postgis_conn, get_all_between_dates, get_per_location
 import logging
+
+logging.basicConfig(level=os.environ.get("LOGGING_LEVEL", "INFO"))
 
 
 class Plotter:
     def __init__(self, dh=None):
         logging.info("Let's plot some stuff!")
+        self.conn = get_postgis_conn()
         if dh is None:
             self.dh = DataHandler()
         else:
             self.dh = dh
 
-    def plot_bar_chart(self, col="day_of_week"):
-        logging.info("Plotting bar chart with " + col)
-        c = self.dh.full_df[col]
+    def show_table(self, doc):
+        startdate = datetime(2015, 9, 16)
+        enddate = datetime(2015, 9, 17)
+        df = get_all_between_dates(self.conn, startdate, enddate, limit=1000)
+        data = {}
+        for col in df:
+            data[col] = df[col]
+        table_source = ColumnDataSource(data=data)
+        columns = [TableColumn(field=x, title=x) for x in list(df)]
+        data_table = DataTable(
+            source=table_source, columns=columns, width=400, height=280
+        )
 
-        indices = c.value_counts().sort_index().index
-        logging.info(c.value_counts().sort_index().values)
-        p = figure(x_range=[str(x) for x in list(indices)], plot_height=250, title=col)
-        p.vbar(x=indices + 0.5, top=c.value_counts().sort_index().values, width=0.9)
+        def update():
+            pass
 
-        p.xgrid.grid_line_color = None
-        p.y_range.start = 0
-        return p
+        lay_out = layout([data_table], sizing_mode="scale_both")
+        logging.info(df)
+        doc.add_root(lay_out)
+        doc.title = "Parking tickets in LA"
 
-    # Completely copied from https://towardsdatascience.com/exploring-and-visualizing-chicago-transit-data-using-pandas-and-bokeh-part-ii-intro-to-bokeh-5dca6c5ced10
+    # Completely copied from
+    # https://towardsdatascience.com/
+    # exploring-and-visualizing-chicago
+    # -transit-data-using-pandas-and-bokeh-
+    # part-ii-intro-to-bokeh-5dca6c5ced10
     # And then remade
     def merc(self, lat, lon):
         # Coordinates = literal_eval(Coords)
@@ -52,7 +70,9 @@ class Plotter:
         return (x, y)
 
     """
-        Generates a number of colors to use for the different clusters when clustering using k-means.
+        Generates a number of colors to
+        use for the different clusters when
+        clustering using k-means.
 
     """
 
@@ -92,51 +112,50 @@ class Plotter:
 
     def test_hist(self, doc):
 
-        default_bar_var = "STR_NM"
-        min_date = date(2019, 9, 16)
-        max_date = date(2019, 9, 17)
+        default_bar_var = "location"
+        min_date = datetime(2014, 9, 16)
+        max_date = datetime(2019, 9, 17)
         self.n_clusters = 4
         default_top = 10
+        self.dh.full_df = get_per_location(self.conn, min_date, max_date, limit=10000)
 
         df = self.dh.full_df
+
         logging.info("Here we are now")
 
         logging.info("Training")
         self.km = KMeans(n_clusters=self.n_clusters)
-        self.km.fit_transform(df[["Latitude", "Longitude"]])
+        self.km.fit_transform(df[["latitude", "longitude"]])
         logging.info("Finished training")
-        df = df.loc[(df["date issued"] >= min_date) & (df["date issued"] <= max_date)]
 
         # Now: create bar chart!
-
+        logging.info("Yes")
         bar_source, bar_plot = self.create_bar_plot(default_bar_var, df, default_top)
         self.bar_var_chosen = default_bar_var
         df = (
-            df.groupby(["Location", "Latitude", "Longitude"])
+            df.groupby(["location", "latitude", "longitude"])
             .count()
-            .reset_index()[["Location", "Latitude", "Longitude", "Exact issuing time"]]
+            .reset_index()[["location", "latitude", "longitude", "freq"]]
         )
         df = df.loc[df.index < 1000]
         self.colours = self.generate_n_colors(self.n_clusters)
         TOOLS = "pan,wheel_zoom,box_select,lasso_select,reset"
 
-        lon, lat = self.merc(df["Latitude"], df["Longitude"])
-
+        lon, lat = self.merc(df["latitude"], df["longitude"])
+        logging.info(df)
         source = ColumnDataSource(
             data=dict(
-                lon=df["Longitude"],
-                lat=df["Latitude"],
-                loc=df["Location"],
-                amount_of_tickets=df["Exact issuing time"],
+                lon=df["longitude"],
+                lat=df["latitude"],
+                loc=df["location"],
+                amount_of_tickets=df["freq"],
                 colors_chosen=[
                     self.colours[x]
-                    for x in self.km.predict(df[["Latitude", "Longitude"]])
+                    for x in self.km.predict(df[["latitude", "longitude"]])
                 ],
                 x=lon,
                 y=lat,
-                amt=3
-                * np.log1p(df["Exact issuing time"])
-                / np.min(np.log1p(df["Exact issuing time"])),
+                amt=3 * np.log1p(df["freq"]) / np.min(np.log1p(df["freq"])),
             )
         )
         TOOLTIPS = [
@@ -170,18 +189,18 @@ class Plotter:
 
         starting_date = DatePicker(
             title="Date Range: ",
-            min_date=self.dh.full_df["date issued"].min(),
-            max_date=self.dh.full_df["date issued"].max(),
+            min_date=datetime(2012, 1, 1),
+            max_date=datetime.now(),
             value=min_date,
         )
         ending_date = DatePicker(
             title="Date Range: ",
-            min_date=self.dh.full_df["date issued"].min(),
-            max_date=self.dh.full_df["date issued"].max(),
+            min_date=datetime(2012, 1, 1),
+            max_date=datetime.now(),
             value=max_date,
         )
-        max_amount_of_points = Slider(
-            title="Number of points in scatter: ",
+        limit = Slider(
+            title="Maximum number of points in scatter: ",
             start=500,
             end=1000000,
             step=500,
@@ -194,20 +213,22 @@ class Plotter:
             step=1,
             value=4,
         )
+
+        makes = pd.read_sql("SELECT DISTINCT MAKE FROM PARKINGTICKET", self.conn)
+        logging.info(makes)
         multi_select = MultiSelect(
             title="Which cars makes to include:",
-            value=list(self.dh.full_df.Make.value_counts().index),
-            options=list(self.dh.full_df.Make.value_counts().index),
+            value=list(makes.make.value_counts().index),
+            options=list(makes.make.value_counts().index),
         )
 
         select_bar_variable = Select(
             title="",
             value=default_bar_var,
             options=[
-                ("Make", "Make"),
+                ("make", "make"),
                 ("Violation Description", "Violation Description"),
                 ("Agency", "Agency"),
-                ("STR_NM", "Street"),
             ],
         )
         show_top = Slider(
@@ -220,22 +241,12 @@ class Plotter:
         submit_button = Button(label="Update map")
 
         def select_data():
-            logging.info("BEFORE MINDATE")
             mindate = starting_date.value
             maxdate = ending_date.value
+            self.dh.full_df = get_per_location(
+                self.conn, mindate, maxdate, limit=limit.value
+            )
             df = self.dh.full_df
-            logging.info("HERE NOW ")
-            logging.info(maxdate)
-            logging.info(mindate)
-            df = df.loc[
-                (df["date issued"] >= mindate)
-                & (df["date issued"] <= maxdate)
-                & (df.Make.isin(multi_select.value))
-            ]
-            logging.info("Here, selecting data")
-            logging.info("max amt of points is ")
-            logging.info(max_amount_of_points.value)
-            logging.info(type(max_amount_of_points.value))
             self.bar_var_chosen = select_bar_variable.value
             bar_source_new, _ = self.create_bar_plot(
                 self.bar_var_chosen, df, show_top.value
@@ -245,23 +256,23 @@ class Plotter:
             ]
             bar_plot.x_range.factors = [str(x) for x in list(indices)][: show_top.value]
             df = (
-                df.groupby(["Location", "Latitude", "Longitude"])
+                df.groupby(["location", "latitude", "longitude"])
                 .count()
                 .reset_index()
-                .sort_values(by="Exact issuing time", ascending=False)
+                .sort_values(by="freq", ascending=False)
             )
             return (
                 bar_source_new,
                 df.loc[
-                    df.index < max_amount_of_points.value,
-                    ["Location", "Latitude", "Longitude", "Exact issuing time"],
+                    df.index < limit.value,
+                    ["location", "latitude", "longitude", "freq"],
                 ],
             )
 
         def update():
             submit_button.label = "Updating..."
             logging.info("In update")
-            # TODO: Only update if Make, min_date or max_date is changed
+            # TODO: Only update if make, min_date or max_date is changed
             bar_source_new, df = select_data()
 
             # TODO: Do not re-render each time
@@ -277,32 +288,30 @@ class Plotter:
                 logging.info("Retraining!")
                 self.n_clusters = nClusters.value
                 self.km = KMeans(n_clusters=self.n_clusters)
-                self.km.fit_transform(self.dh.full_df[["Latitude", "Longitude"]])
+                self.km.fit_transform(self.dh.full_df[["latitude", "longitude"]])
                 self.colours = self.generate_n_colors(self.n_clusters)
             else:
                 logging.info("Not retraining")
-            lon, lat = self.merc(df["Latitude"], df["Longitude"])
+            lon, lat = self.merc(df["latitude"], df["longitude"])
             source.data = dict(
                 x=lon,
                 y=lat,
-                loc=df["Location"],
-                lat=df["Longitude"],
-                lon=df["Latitude"],
-                amount_of_tickets=df["Exact issuing time"],
+                loc=df["location"],
+                lat=df["longitude"],
+                lon=df["latitude"],
+                amount_of_tickets=df["freq"],
                 colors_chosen=[
                     self.colours[x]
-                    for x in self.km.predict(df[["Latitude", "Longitude"]])
+                    for x in self.km.predict(df[["latitude", "longitude"]])
                 ],
-                amt=3
-                * np.log1p(df["Exact issuing time"])
-                / np.min(np.log1p(df["Exact issuing time"])),
+                amt=3 * np.log1p(df["freq"]) / np.min(np.log1p(df["freq"])),
             )
             submit_button.label = "Update map"
 
         controls = [
             starting_date,
             ending_date,
-            max_amount_of_points,
+            limit,
             nClusters,
             multi_select,
             submit_button,
@@ -310,16 +319,9 @@ class Plotter:
 
         def update_top_bar():
             logging.info("BEFORE MINDATE")
-            mindate = (
-                starting_date.value
-            )  # date.fromtimestamp(starting_date.value / 1e3)
-            maxdate = ending_date.value  # date.fromtimestamp(ending_date.value / 1e3)
+            # mindate = starting_date.value
+            # maxdate = ending_date.value
             df = self.dh.full_df
-            df = df.loc[
-                (df["date issued"] >= mindate)
-                & (df["date issued"] <= maxdate)
-                & (df.Make.isin(multi_select.value))
-            ]
             self.bar_var_chosen = select_bar_variable.value
             bar_source_new, _ = self.create_bar_plot(
                 self.bar_var_chosen, df, show_top.value
