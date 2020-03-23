@@ -1,11 +1,11 @@
 #!/bin/sh
-echo "Downloading datasets"
-cat ~/.kaggle/kaggle.json
+mkdir Data
+mkdir Data/MetaData
+mkdir Data/processed_data
+chmod 600 ~/.kaggle/kaggle.json
 kaggle datasets download -d cityofLA/los-angeles-parking-citations
-echo "Unzipping"
 unzip los-angeles-parking-citations
 rm los-angeles-parking-citations.zip
-rm $pdf_file_name #LADOT\-Xerox\ Crib\ Sheet\ Agency\ Codes\ 12\-31\-2015\ \(1\).pdf
 # Is the data removed yet? No
 rm Data/parking-citations.csv
 # Now yes
@@ -15,7 +15,15 @@ mv metadata_parking_tickets.json Data/MetaData/
 # Fetching the addresses
 kaggle datasets download -d cityofLA/los-angeles-addresses
 unzip los-angeles-addresses.zip
-mv addresses-in-the-city-of-los-angeles.csv Data/
+rm los-angeles-addresses.zip
+mv addresses-in-the-city-of-los-angeles.csv Data/addresses-in-the-city-of-los-angeles.csv
+
 mv socrata_metadata.json metadata_addresses.json
 mv metadata_addresses.json Data/MetaData/
-# Data should now be prepared. Now process it?
+# Data should now be prepared. Now input it into the sql db.
+python3 -u ./ingest_into_db.py
+# Then, delete the data files to save memory.
+# Not really necessary anymore since I do a batch processing in the beginning.
+rm -R Data/
+
+#python3 -u ./index.py

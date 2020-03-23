@@ -1,0 +1,5 @@
+SELECT *
+FROM PARKINGTICKET
+WHERE EXACTISSUINGTIME >= DATE('{startdate}')
+and EXACTISSUINGTIME <= DATE('{enddate}')
+LIMIT '{limit}';

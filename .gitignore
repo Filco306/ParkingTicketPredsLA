@@ -10,3 +10,11 @@ Old/
 *.aux
 *.log
 *.synctex.gz
+venv/
+Paper/
+__init__.py
+.api_env
+.db_env
+gisstuff/
+.ingestor_env
+.flake8

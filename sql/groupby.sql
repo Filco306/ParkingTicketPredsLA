@@ -1,0 +1,7 @@
+SELECT '{cols}', COUNT(*) AS FREQ
+  FROM PARKINGTICKET
+  WHERE EXACTISSUINGTIME >= '{startdate}'
+  AND EXACTISSUINGTIME <= '{enddate}'
+  GROUP BY '{cols}'
+  ORDER BY FREQ DESC
+  LIMIT '{limit}'

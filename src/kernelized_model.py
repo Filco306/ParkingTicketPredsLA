@@ -1,8 +1,13 @@
-import numpy as np
 from scipy import stats
-from Modules.ETL.data_handler import DataHandler
+from src.data_handler import DataHandler
+import logging
+import os
+
+logging.basicConfig(level=os.environ.get("LOGGING_LEVEL", "INFO"))
+
+
 class KernelModel:
-    def __init__(self, dh = None, kernel_cols = None):
+    def __init__(self, dh=None, kernel_cols=None):
         if dh is None:
             self.dh = DataHandler()
         else:
@@ -13,9 +18,8 @@ class KernelModel:
         else:
             self.kernel_cols = kernel_cols
 
-        print("Initializing")
+        logging.info("Initializing")
         self.kde = None
-
 
     def train_model(self):
 
@@ -25,15 +29,18 @@ class KernelModel:
             vals = self.dh.get_density_df().values.T
 
         self.kde = stats.gaussian_kde(vals)
-        print("Trained a kde")
+        logging.info("Trained a kde")
 
     """
-        Assumes a preprocessed df sent in and predicts, for each data point, a density prediction.
+        Assumes a preprocessed df sent
+        in and predicts, for each data point,
+        a density prediction.
 
     """
-    def get_densities(self, df = None):
+
+    def get_densities(self, df=None):
         if self.kde is None:
-            print("No trained kde, training now. ")
+            logging.info("No trained kde, training now. ")
             self.train_model()
 
         if df is None:
@@ -43,5 +50,4 @@ class KernelModel:
             vals = df[self.kernel_cols].values.T
         else:
             vals = df.values.T
-        #vals = df.values.T
         return self.kde.evaluate(vals)

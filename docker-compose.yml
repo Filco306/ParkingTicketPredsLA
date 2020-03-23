@@ -1,0 +1,39 @@
+version: "3"
+services:
+  db:
+    container_name: "postgres"
+    image: "postgres"
+    restart: "always"
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./db/:/docker-entrypoint-initdb.d/"
+    env_file:
+      - ".db_env"
+  dataingestor:
+    container_name: dataingestor
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestion
+    volumes:
+      - "./src:/usr/src/app/src"
+    depends_on:
+      - "db"
+    env_file:
+      - ".ingestor_env"
+  parkingapi:
+    container_name: parkingapi
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+      - "5006:5006"
+    volumes:
+      - "./src:/usr/src/app/src"
+    depends_on:
+      - "db"
+    env_file:
+      - ".api_env"
