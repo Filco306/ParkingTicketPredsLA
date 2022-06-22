@@ -1,7 +1,7 @@
 psycopg2==2.8.4
 pandas==0.25.1
 bokeh==1.4.0
-numpy==1.17.2
+numpy==1.22.0
 holidays==0.9.12
 pyproj==2.5.0
 scikit-learn==0.22
